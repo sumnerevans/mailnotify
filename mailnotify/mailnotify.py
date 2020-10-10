@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import email
+import os
 import re
 from email.header import decode_header
 from pathlib import Path
@@ -13,7 +14,10 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 MAILDIR = Path("~/Mail").expanduser()
-ICON_PATH = "/usr/share/icons/Yaru/48x48/apps/mail-app.png"
+ICON_PATH = os.environ.get(
+    "ICON_PATH",
+    "/usr/share/icons/Yaru/48x48/apps/mail-app.png",
+)
 
 Notify.init("Mail Notification Daemon")
 
@@ -57,16 +61,10 @@ class MailWatchDaemon(FileSystemEventHandler):
                 content_disposition = payload.get("Content-Disposition", "")
                 if "encrypted" in content_type:
                     message_content = ["<encrypted message>"]
-                elif (
-                    content_type == "text/plain"
-                    and "attachment" not in content_disposition
-                ):
-                    payload_lines = (
-                        payload.get_payload(decode=True)
-                        .decode("utf-8")
-                        .strip()
-                        .split("\n")
-                    )
+                elif (content_type == "text/plain"
+                      and "attachment" not in content_disposition):
+                    payload_lines = (payload.get_payload(
+                        decode=True).decode("utf-8").strip().split("\n"))
                     payload_lines = map(self.esc, payload_lines)
                     message_content = list(filter(len, payload_lines))[:3]
 
@@ -79,13 +77,11 @@ class MailWatchDaemon(FileSystemEventHandler):
 
         notification = Notify.Notification.new(
             self.esc(from_address),
-            "\n".join(
-                [
-                    f"<i>Subject: {self.esc(subject)}</i>",
-                    f"<i>To: {self.esc(to_address)}</i>",
-                    *message_content,
-                ]
-            ),
+            "\n".join([
+                f"<i>Subject: {self.esc(subject)}</i>",
+                f"<i>To: {self.esc(to_address)}</i>",
+                *message_content,
+            ]),
             ICON_PATH,
         )
         notification.set_timeout(15000)
