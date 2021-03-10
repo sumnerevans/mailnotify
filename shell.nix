@@ -24,5 +24,8 @@ pkgs.mkShell {
   # hook for gobject-introspection doesn't like strictDeps
   # https://github.com/NixOS/nixpkgs/issues/56943
   strictDeps = false;
-}
 
+  shellHook = ''
+    export SOURCE_DATE_EPOCH=315532800
+  '';
+}

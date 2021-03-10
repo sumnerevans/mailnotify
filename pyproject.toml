@@ -5,6 +5,9 @@ description = "A small program that notifies when mail has arrived in ~/Mail"
 authors = ["Sumner Evans <inquiries@sumnerevans.com>"]
 license = "GPL-3.0-or-later"
 
+[tool.poetry.scripts]
+mailnotify = "mailnotify.__main__:main"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 watchdog = "^0.10.3"
