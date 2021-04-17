@@ -2,8 +2,8 @@
 import email
 import os
 import re
-from email.header import decode_header
-from pathlib import Path
+
+import bleach
 
 import gi
 
@@ -11,32 +11,22 @@ gi.require_version("Notify", "0.7")
 from gi.repository import Notify
 
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 ICON_PATH = os.environ.get(
     "ICON_PATH",
     "/usr/share/icons/Yaru/48x48/apps/mail-app.png",
 )
 
-Notify.init("Mail Notification Daemon")
-
 
 class MailWatchDaemon(FileSystemEventHandler):
     metadata_re = re.compile(r".*\.mbsyncstate\..*$")
     from_re = re.compile("(.*)<.*@.*>")
-
-    def esc(self, string: str) -> str:
-        return string.replace("<", "&lt;").replace(">", "&gt;")
 
     def on_created(self, event):
         try:
             self._do_on_created(event)
         except Exception as e:
             print("ERROR", e)
-
-    def _get_header(self, message, header_name: str, default: str = "") -> str:
-        header = decode_header(message.get(header_name, default))[0][0]
-        return header.decode("utf-8") if isinstance(header, bytes) else header
 
     def _do_on_created(self, event):
         mail_path = event.src_path
@@ -49,23 +39,33 @@ class MailWatchDaemon(FileSystemEventHandler):
         with open(mail_path) as f:
             message = email.message_from_file(f)
 
-        from_address = self._get_header(message, "From")
-        to_address = self._get_header(message, "Delivered-To")
-        subject = self._get_header(message, "Subject", "<NO SUBJECT>")
+        from_address = message["From"]
+        to_address = message["Delivered-To"]
+        subject = message.get("Subject", "<NO SUBJECT>")
 
-        message_content = None
-        for payload in message.get_payload():
-            if isinstance(payload, email.message.Message):
-                content_type = payload.get_content_type()
+        message_content = []
+        content_type = message.get_content_type()
+        if content_type == "multipart/encrypted":
+            message_content = ["<encrypted message>"]
+
+        elif content_type == "multipart/alternative":
+            for payload in message.get_payload():
                 content_disposition = payload.get("Content-Disposition", "")
-                if "encrypted" in content_type:
-                    message_content = ["<encrypted message>"]
-                elif (content_type == "text/plain"
-                      and "attachment" not in content_disposition):
-                    payload_lines = (payload.get_payload(
-                        decode=True).decode("utf-8").strip().split("\n"))
-                    payload_lines = map(self.esc, payload_lines)
-                    message_content = list(filter(len, payload_lines))[:3]
+                if "attachment" in content_disposition:
+                    continue
+
+                if payload.get_content_type() == "text/plain":
+                    payload_lines = (
+                        payload.get_payload(decode=True)
+                        .decode("utf-8")
+                        .strip()[:100]
+                        .split("\n")
+                    )
+                    message_content = [l for l in payload_lines if len(l) > 0][:3]
+                    break
+
+        elif content_type == "text/plain":
+            message_content = message.get_payload()[:100].split("\n")[:3]
 
         if match := self.from_re.fullmatch(from_address):
             from_address = match.group(1)
@@ -75,12 +75,16 @@ class MailWatchDaemon(FileSystemEventHandler):
         print(f"With subject {subject}")
 
         notification = Notify.Notification.new(
-            self.esc(from_address),
-            "\n".join([
-                f"<i>Subject: {self.esc(subject)}</i>",
-                f"<i>To: {self.esc(to_address)}</i>",
-                *message_content,
-            ]),
+            bleach.clean(from_address),
+            bleach.clean(
+                "\n".join(
+                    [
+                        f"<i>Subject: {subject}</i>",
+                        f"<i>To: {to_address}</i>",
+                    ]
+                    + message_content
+                ),
+            ),
             ICON_PATH,
         )
         notification.set_timeout(15000)
