@@ -1,3 +1,4 @@
+import sys
 import time
 from pathlib import Path
 
@@ -10,15 +11,14 @@ from watchdog.observers import Observer
 
 from mailnotify.mailnotify import MailWatchDaemon
 
-MAILDIR = Path("~/Mail").expanduser()
-
 Notify.init("Mail Notification Daemon")
 
 
 def main():
+    maildir = Path(sys.argv[1]).expanduser()
     daemon = MailWatchDaemon()
     observer = Observer()
-    observer.schedule(daemon, str(MAILDIR.absolute()), recursive=True)
+    observer.schedule(daemon, str(maildir.absolute()), recursive=True)
     observer.start()
 
     try:

@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }: with pkgs;
+{ pkgs ? import <nixpkgs> { } }: with pkgs;
 pkgs.mkShell {
   nativeBuildInputs = [
     gobject-introspection
@@ -14,7 +14,8 @@ pkgs.mkShell {
     cairo
     pkg-config
     poetry
-    (python38.withPackages (ps: with ps; [
+    python3Packages.black
+    (python3.withPackages (ps: with ps; [
       pygobject3
       pycairo
       watchdog

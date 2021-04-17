@@ -13,7 +13,6 @@ from gi.repository import Notify
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-MAILDIR = Path("~/Mail").expanduser()
 ICON_PATH = os.environ.get(
     "ICON_PATH",
     "/usr/share/icons/Yaru/48x48/apps/mail-app.png",
