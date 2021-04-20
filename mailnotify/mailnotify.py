@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import email
+import email.header
 import os
 import re
 
@@ -39,9 +40,14 @@ class MailWatchDaemon(FileSystemEventHandler):
         with open(mail_path) as f:
             message = email.message_from_file(f)
 
-        from_address = message["From"]
-        to_address = message["Delivered-To"]
-        subject = message.get("Subject", "<NO SUBJECT>")
+        def get_header(header_name, default=None) -> str:
+            header = message.get(header_name, default)
+            string, charset = email.header.decode_header(header)[0]
+            return string.decode(charset) if charset is not None else str(string)
+
+        from_address = get_header("From")
+        to_address = get_header("Delivered-To")
+        subject = get_header("Subject", "<NO SUBJECT>")
 
         message_content = []
         content_type = message.get_content_type()
