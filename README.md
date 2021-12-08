@@ -14,7 +14,4 @@ mailnotify ~/path/to/mail/dir
 
 ## Contributing
 
-If you want to contribute to this project, submit patches or start discussions
-on the
-[~sumner/public-inbox@lists.sr.ht](https://lists.sr.ht/~sumner/public-inbox)
-mailing list.
+If you want to contribute to this project, submit an issue or pull request.

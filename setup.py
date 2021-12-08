@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 setup(
     name="mailnotify",
     version="0.0.1",
-    url="https://git.sr.ht/~sumner/mailnotify/",
+    url="https://github.com/sumnerevans/mailnotify",
     description="A small program that notifies when mail has arrived in ~/Mail",
     author="Sumner Evans",
     author_email="inquiries@sumnerevans.com",
