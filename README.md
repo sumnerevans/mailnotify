@@ -1,16 +1,12 @@
 # mailnotify
 
-A small program that notifies when mail has arrived in your mail directory.
+A small Go program that notifies when mail has arrived in your mail directory.
 
 ## Usage
 
 ```
-mailnotify ~/path/to/mail/dir
+mailnotify ~/path/to/mail/dir [path to icon file]
 ```
-
-## Environment Variables
-
-* `ICON_PATH`: the path to the icon to use for the notifications.
 
 ## Contributing
 
