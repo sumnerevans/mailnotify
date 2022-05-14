@@ -17,9 +17,7 @@ import (
 
 var pathRegex = regexp.MustCompile(`.*\/INBOX\/new\/.*`)
 
-var htmlEscaper = strings.NewReplacer(
-	`&`, "&amp;", `<`, "&lt;", `>`, "&gt;",
-)
+var htmlEscaper = strings.NewReplacer(`&`, "&amp;", `<`, "&lt;", `>`, "&gt;")
 
 func main() {
 	// Connect to DBus for sending the notification
